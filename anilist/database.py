@@ -1,31 +1,32 @@
 import csv
-from tempfile import NamedTemporaryFile
+import importlib.resources
+import os
 import shutil
+from tempfile import NamedTemporaryFile
 from typing import Dict
-from anilist.tools import get_matching_title
 
 from anilist.status import AniListType
+from anilist.tools import get_matching_title, get_res_file
 
 
 # NOTE: currently a cvs file, but in the future it should use sqlight
 class Database:
-    ANILIST_CSV = (
-        "/home/agsayan/Documents/Workspace/Github/WallabagAutomation/anilist.csv"
-    )
     TEMP = "/tmp/anilist.csv"
-    FIELDNAMES = ["Query", "Result", "ID", "TYPE"]
 
     # columns
     QUERY = "Query"
     ANILIST_TITLE = "Result"
     ANILIST_ID = "ID"
-    ANILIST_TYP = "TYPE"
+    ANILIST_TYPE = "TYPE"
+    FIELDNAMES = [QUERY, ANILIST_TITLE, ANILIST_ID, ANILIST_TYPE]
     # TODO: rename
     cvs_file = None
 
     def __init__(self, anilist_csv=""):
         if anilist_csv:
             self.ANILIST_CSV = anilist_csv
+            return
+        self.ANILIST_CSV = get_res_file("anilist.csv")
 
     # TEST: does this work
     def update_entry(self, search_query: str, result: str, id: int, typ: AniListType):
@@ -49,13 +50,13 @@ class Database:
                         row[self.QUERY],
                         row[self.ANILIST_TITLE],
                         row[self.ANILIST_ID],
-                        row[self.ANILIST_TYP],
+                        row[self.ANILIST_TYPE],
                     ) = (search_query, result, id, typ.name)
                 row = {
                     self.QUERY: row[self.QUERY],
                     self.ANILIST_TITLE: row[self.ANILIST_TITLE],
                     self.ANILIST_ID: row[self.ANILIST_ID],
-                    self.ANILIST_TYP: row[self.ANILIST_TYP],
+                    self.ANILIST_TYPE: row[self.ANILIST_TYPE],
                 }
 
                 writer.writerow(row)
@@ -94,7 +95,9 @@ class Database:
             return
 
         with open(self.ANILIST_CSV, "a") as f:
-            f.write("{};{};{};{}\n".format(search_query, result, id, typ.value)) # TEST: must work like the old one
+            f.write(
+                "{};{};{};{}\n".format(search_query, result, id, typ.value)
+            )  # TEST: must work like the old one
 
     def get_title(self, search_query: str, type: AniListType) -> str:
         title = self.read_row(search_query, type, self.ANILIST_TITLE)
@@ -107,7 +110,6 @@ class Database:
         if id == "":
             return -1
         return int(id)
-
 
     def get_cvs_file(self):
         if self.cvs_file:
@@ -128,7 +130,7 @@ class Database:
             for row in self.get_cvs_file():
                 query = row[filter_column].lower()
                 anilist_title = row[self.ANILIST_TITLE].lower()
-                anilist_type = AniListType[row[self.ANILIST_TYP].lower()]
+                anilist_type = AniListType[row[self.ANILIST_TYPE].lower()]
 
                 query = query.lower()
                 anilist_title = anilist_title.lower()
@@ -142,5 +144,3 @@ class Database:
 
         except IOError:
             return ""
-
-        return ""
