@@ -107,7 +107,7 @@ class Database:
         id = self.read_row(
             search_query, type, self.ANILIST_ID, filter_column=filter_column
         )
-        if id == "":
+        if not id.isnumeric():
             return -1
         return int(id)
 
@@ -142,5 +142,6 @@ class Database:
                 ) and anilist_type == typ:
                     return row[column]
 
-        except IOError:
+        except Exception:
             return ""
+        return ""
