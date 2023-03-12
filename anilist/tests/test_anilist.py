@@ -70,7 +70,7 @@ def test_user_infos():
 
 def test_get_manga_collection():
     user_id = 5543995  # User id of Keitos
-    manga_collection = anilist.get_manga_collection_of(user_id)
+    manga_collection = anilist.get_manga_collection_by_id(user_id)
 
     assert len(manga_collection["lists"]) > 0
     assert len(manga_collection["lists"][0]["entries"]) > 0
@@ -211,7 +211,7 @@ def test_titles_without_strokes():
 
 
 def test_deep_search_medias():
-    manga_collection = anilist.get_manga_collection_of(5543995)
+    manga_collection = anilist.get_manga_collection_by_id(5543995)
     lists = manga_collection["lists"]
 
     query = "Ariureta Shkugyou deSekai Saikyou"

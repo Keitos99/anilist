@@ -181,12 +181,12 @@ class Anilist:
                 return user
         return None
 
-    def get_manga_collection_of(self, user_name: str) -> Dict:
+    def get_manga_collection_by_name(self, user_name: str) -> Dict:
         user = self.search_user(user_name)
         if not user:
             return {}
 
-        manga_list_collection = self.get_manga_collection_of(user["id"])
+        manga_list_collection = self.get_manga_collection_by_id(user["id"])
         lists = manga_list_collection["lists"]
 
         mangas = {}
@@ -213,7 +213,7 @@ class Anilist:
                 mangas[id]["tags"] = tags
         return mangas
 
-    def get_manga_collection_of(self, user_id: int):
+    def get_manga_collection_by_id(self, user_id: int):
         variables = {"userId": user_id}
         result = _run_query(
             uri=self.URI, query=graphql.MANGA_LIST_COLLECTION, variables=variables
