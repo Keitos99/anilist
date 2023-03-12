@@ -26,7 +26,7 @@ class Database:
         if anilist_csv:
             self.ANILIST_CSV = anilist_csv
             return
-        self.ANILIST_CSV = get_res_file("anilist.csv")
+        self.ANILIST_CSV = "/home/agsayan/.local/share/anilist.csv"
 
     # TEST: does this work
     def update_entry(self, search_query: str, result: str, id: int, typ: AniListType):
