@@ -3,7 +3,9 @@ import os
 from anilist import Anilist, get_matching_media, get_matching_title
 from anilist.status import ReadingStatus
 
-token = os.environ["ANILIST_TOKEN"]
+token = ""
+if "ANILIST_TOKEN" in os.environ:
+    token = os.environ["ANILIST_TOKEN"]
 anilist = Anilist(token)
 
 
@@ -70,6 +72,7 @@ def test_user_infos():
 
 def test_get_manga_collection():
     user_id = 5543995  # User id of Keitos
+
     manga_collection = anilist.get_manga_collection_by_id(user_id)
 
     assert len(manga_collection["lists"]) > 0
