@@ -3,7 +3,7 @@ import importlib.resources
 import os
 import shutil
 from tempfile import NamedTemporaryFile
-from typing import Dict
+from typing import Dict, List
 
 from anilist.status import AniListType
 from anilist.tools import get_matching_title, get_res_file
@@ -20,7 +20,6 @@ class Database:
     ANILIST_TYPE = "TYPE"
     FIELDNAMES = [QUERY, ANILIST_TITLE, ANILIST_ID, ANILIST_TYPE]
     # TODO: rename
-    cvs_file = None
 
     def __init__(self, anilist_csv=""):
         if anilist_csv:
@@ -76,12 +75,12 @@ class Database:
         assert isinstance(typ, AniListType)
 
         title = self.get_title(search_query=search_query, type=typ)
-        cvs_id = self.get_id(search_query=search_query, type=typ)
+        database_id = self.get_id(search_query=search_query, type=typ)
 
-        if title and id > 0:
+        if title and database_id > 0:
             return
 
-        if title and cvs_id == -1 and id > 0:
+        if title and database_id == -1 and id > 0:
             print(
                 "Updating entry:\nsearch_query = {}\nresult = {}\ntyp = {}".format(
                     search_query, result, typ.value, typ.value
@@ -111,15 +110,13 @@ class Database:
             return -1
         return int(id)
 
-    def get_cvs_file(self):
-        if self.cvs_file:
-            return self.cvs_file
+    def get_rows(self) -> List[Dict]:
         with open(self.ANILIST_CSV, "r") as f:
             spamreader = csv.DictReader(
                 f, delimiter=";", quotechar="|", fieldnames=self.FIELDNAMES
             )
-            self.cvs_file = [row for row in spamreader]
-        return self.cvs_file
+            cvs_file = [row for row in spamreader]
+        return cvs_file
 
     # FIX: TO SLOW
     def read_row(
@@ -127,7 +124,7 @@ class Database:
     ) -> str:
         search_query = search_query.lower()
         try:
-            for row in self.get_cvs_file():
+            for row in self.get_rows():
                 query = row[filter_column].lower()
                 anilist_title = row[self.ANILIST_TITLE].lower()
                 anilist_type = AniListType[row[self.ANILIST_TYPE].lower()]
