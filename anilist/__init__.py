@@ -66,11 +66,15 @@ class Anilist:
 
         id = self.database.get_id(search_query, type)
         if id > 0:  # was once searched, so choosing the correct one can be skipped
-            return _run_query(
+            response = _run_query(
                 self.URI,
                 query=graphql.SEARCH_QUERY_ID,
                 variables={"id": id, "typ": type.value},
             )
+            page = response["data"]["Page"]
+            total = page["pageInfo"]["total"]
+            medias = page["media"]
+            return get_matching_media(medias)
 
         query = graphql.SEARCH_QUERY
         variables = {
