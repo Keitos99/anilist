@@ -74,7 +74,7 @@ class Anilist:
             page = response["data"]["Page"]
             total = page["pageInfo"]["total"]
             medias = page["media"]
-            return get_matching_media(medias)
+            return get_matching_media(search_query, medias)
 
         query = graphql.SEARCH_QUERY
         variables = {
