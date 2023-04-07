@@ -234,3 +234,4 @@ def test_get_cover_image():
         img_url
         == "https://s4.anilist.co/file/anilistcdn/media/manga/cover/small/bx54098-NZ21m9i1lZOs.jpg"
     )
+

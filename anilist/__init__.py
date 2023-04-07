@@ -20,6 +20,7 @@ class Anilist:
     URI = "https://graphql.anilist.co"
     CONTENT_TYP = "application/json"
     ACCEPT = "application/json"
+    DO_NOT_UPDATE = -2
 
     def __init__(self, authorization: str = "", database=Database()):
         self.database = database
@@ -35,7 +36,8 @@ class Anilist:
 
     def update_progress(self, id: int, progress: int):
         if not self.header:
-            raise Exception("You must add your anilist token to update entries")
+            raise Exception(
+                "You must add your anilist token to update entries")
 
         if id < 0:
             raise Exception("id={} must be positive".format(id))
@@ -112,6 +114,9 @@ class Anilist:
         return self._search(AniListType.anime, search_query)
 
     def get_manga_title(self, search_query: str) -> int:
+        if self.database.get_id(search_query, AniListType.manga) == self.DO_NOT_UPDATE:
+            return self.database.get_title(search_query, AniListType.manga)
+
         title = self.database.get_title(search_query, AniListType.manga)
         if title:
             return title
@@ -126,6 +131,9 @@ class Anilist:
 
     def get_manga_id(self, search_query: str) -> int:
         id = self.database.get_id(search_query, AniListType.manga)
+        if id ==  self.DO_NOT_UPDATE:
+            return id
+
         if id > 0:
             return id
 
@@ -166,7 +174,8 @@ class Anilist:
         return ReadingStatus.CURRENT
 
     def get_cover_image(self, id: int) -> str:
-        variables = {"id": id, "page": 1, "perPage": 1, "type": AniListType.manga.value}
+        variables = {"id": id, "page": 1, "perPage": 1,
+                     "type": AniListType.manga.value}
         return _run_query(
             uri=self.URI,
             query=graphql.SEARCH_IMAGES,
@@ -246,7 +255,8 @@ def _run_query(uri, query, variables, headers=None, expected_status_code=HTTPSta
         print("run_query:: Query:", query)
         print("run_query:: variables", variables)
         print("run_query:: variables", response.text)
-        raise Exception(f"Unexpected status code returned: {response.status_code}")
+        raise Exception(
+            f"Unexpected status code returned: {response.status_code}")
 
 
 if __name__ == "__main__":

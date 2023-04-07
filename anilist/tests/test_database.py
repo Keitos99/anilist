@@ -1,3 +1,4 @@
+from anilist import Anilist
 from anilist.database import Database
 from anilist.status import AniListType
 
@@ -22,3 +23,4 @@ def test_no_double_saving():
     counted_rows_after_second_saving = len(database.get_rows())
 
     assert counted_rows_after_first_saving == counted_rows_after_second_saving
+
