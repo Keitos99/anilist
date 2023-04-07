@@ -123,6 +123,8 @@ class Anilist:
 
         manga = self.search_manga(search_query=search_query)
         if not manga:
+            self.database.save(
+                search_query, search_query, -1, AniListType.manga)
             return ""
 
         self.database.save_media(search_query, manga)
@@ -131,7 +133,7 @@ class Anilist:
 
     def get_manga_id(self, search_query: str) -> int:
         id = self.database.get_id(search_query, AniListType.manga)
-        if id ==  self.DO_NOT_UPDATE:
+        if id == self.DO_NOT_UPDATE:
             return id
 
         if id > 0:

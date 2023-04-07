@@ -1,5 +1,6 @@
 from anilist import Anilist
 
 anilist = Anilist()
-print(anilist.get_manga_title("The Blood Moon"))
-print(anilist.get_manga_id("The Blood Moon"))
+title = "The Reincarnation Of Countess Diabolique"
+print(anilist.get_manga_title(title))
+print(anilist.get_manga_id(title))

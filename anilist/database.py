@@ -106,9 +106,12 @@ class Database:
         id = self.read_row(
             search_query, type, self.ANILIST_ID, filter_column=filter_column
         )
-        if not id.lstrip("-").isnumeric():
-            raise Exception(f"Found for the search query \"{search_query}\" an non numeric entry: \"{id}\"!")
+        if not id:
             return -1
+
+        if not id.lstrip("-").isnumeric():
+            raise Exception(
+                f"Found for the search query \"{search_query}\" an non numeric entry: \"{id}\"!")
         return int(id)
 
     def get_rows(self) -> List[Dict]:
