@@ -1,4 +1,4 @@
-READING_STATUS = """
+MAX_PROGRESS_QUERY = """
     query ($page: Int, $perPage: Int, $id: Int) {
         Page(page: $page, perPage: $perPage) {
           pageInfo {
@@ -15,7 +15,7 @@ READING_STATUS = """
 """
 
 
-SEARCH_IMAGES = """
+SEARCH_IMAGES_QUERY = """
     query ($page: Int, $perPage: Int, $id: Int, $type: MediaType) {
     Page(page: $page, perPage: $perPage) {
       pageInfo {
@@ -34,55 +34,8 @@ SEARCH_IMAGES = """
   }
 """
 
-
-SEARCH_QUERY_ID = """
-    query ($page: Int, $perPage: Int, $id: Int, $type: MediaType) {
-    Page(page: $page, perPage: $perPage) {
-      pageInfo {
-        total
-        perPage
-      }
-      media(id: $id, type: $type, sort: FAVOURITES_DESC) {
-        id
-        synonyms
-        type
-        title {
-            romaji
-            english
-        }
-        startDate {
-            year
-            month
-            day
-        }
-        endDate {
-            year
-            month
-            day
-        }
-        coverImage {
-            large
-        }
-        tags {
-            name
-        }
-        bannerImage
-        format
-        chapters
-        volumes
-        status
-        description
-        averageScore
-        meanScore
-        genres
-        synonyms
-      }
-    }
-  }
-    """
-
 SEARCH_QUERY = """
-    query ($page: Int, $perPage: Int, $search: String, $type: MediaType) {
+query ($page: Int, $perPage: Int, $search: String, $type: MediaType) {
     Page(page: $page, perPage: $perPage) {
       pageInfo {
         total
@@ -95,6 +48,8 @@ SEARCH_QUERY = """
         title {
             romaji
             english
+            native
+            userPreferred
         }
         startDate {
             year
@@ -112,6 +67,7 @@ SEARCH_QUERY = """
         tags {
             name
         }
+        isAdult
         bannerImage
         format
         chapters
@@ -128,17 +84,18 @@ SEARCH_QUERY = """
     """
 
 
-UPDATE_QUERY = """
+MEDIA_PROGRESS_MUTATION = """
     mutation ($mediaId: Int, $status: MediaListStatus, $progress: Int) {
         SaveMediaListEntry (mediaId: $mediaId, status: $status, progress: $progress ) {
             id
+            mediaId
             status
             progress
         }
     }
 """
 
-MANGA_LIST_COLLECTION = """
+MANGA_LIST_COLLECTION_QUERY = """
 query MangaListCollectionQuery(
     $userId: Int
 ) {
@@ -218,7 +175,7 @@ query MangaListCollectionQuery(
 }
 """
 
-SEARCH_USER = """
+SEARCH_USER_QUERY = """
 query SearchUsersQuery(
     $page: Int,
     $search: String,

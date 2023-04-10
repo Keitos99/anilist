@@ -5,7 +5,7 @@ import shutil
 from tempfile import NamedTemporaryFile
 from typing import Dict, List
 
-from anilist.status import AniListType
+from anilist.status import MediaType
 from anilist.tools import get_matching_title, get_res_file
 
 
@@ -27,8 +27,7 @@ class Database:
             return
         self.ANILIST_CSV = "/home/agsayan/.local/share/anilist.csv"
 
-    # TEST: does this work
-    def update_entry(self, search_query: str, result: str, id: int, typ: AniListType):
+    def update_entry(self, search_query: str, result: str, id: int, typ: MediaType):
         tempfile = NamedTemporaryFile(mode="w", delete=False)
         with open(self.ANILIST_CSV, "r") as csvfile, tempfile:
             reader = csv.DictReader(
@@ -45,12 +44,10 @@ class Database:
             for row in reader:
                 if row[self.QUERY] == search_query:
                     print("updating row", row)
-                    (
-                        row[self.QUERY],
-                        row[self.ANILIST_TITLE],
-                        row[self.ANILIST_ID],
-                        row[self.ANILIST_TYPE],
-                    ) = (search_query, result, id, typ.name)
+                    row[self.QUERY] = search_query
+                    row[self.ANILIST_TITLE] = result
+                    row[self.ANILIST_ID] = id
+                    row[self.ANILIST_TYPE] = typ.name
                 row = {
                     self.QUERY: row[self.QUERY],
                     self.ANILIST_TITLE: row[self.ANILIST_TITLE],
@@ -64,16 +61,11 @@ class Database:
     def save_media(self, search_query: str, media: Dict):
         titles = list(media["title"].values()) + media["synonyms"]
         title = get_matching_title(search_query, titles)
-        media_type = AniListType(media["type"])
+        media_type = MediaType(media["type"])
         id = media["id"]
         self.save(search_query, title, id, media_type)
 
-    def save(self, search_query: str, result: str, id: int, typ: AniListType):
-        assert isinstance(search_query, str)
-        assert isinstance(result, str)
-        assert isinstance(id, int)
-        assert isinstance(typ, AniListType)
-
+    def save(self, search_query: str, result: str, id: int, typ: MediaType):
         title = self.get_title(search_query=search_query, type=typ)
         database_id = self.get_id(search_query=search_query, type=typ)
 
@@ -96,13 +88,13 @@ class Database:
         with open(self.ANILIST_CSV, "a") as f:
             f.write(
                 "{};{};{};{}\n".format(search_query, result, id, typ.value)
-            )  # TEST: must work like the old one
+            )
 
-    def get_title(self, search_query: str, type: AniListType) -> str:
+    def get_title(self, search_query: str, type: MediaType) -> str:
         title = self.read_row(search_query, type, self.ANILIST_TITLE)
         return title
 
-    def get_id(self, search_query: str, type: AniListType, filter_column=QUERY) -> int:
+    def get_id(self, search_query: str, type: MediaType, filter_column=QUERY) -> int:
         id = self.read_row(
             search_query, type, self.ANILIST_ID, filter_column=filter_column
         )
@@ -114,7 +106,7 @@ class Database:
                 f"Found for the search query \"{search_query}\" an non numeric entry: \"{id}\"!")
         return int(id)
 
-    def get_rows(self) -> List[Dict]:
+    def _get_rows(self) -> List[Dict]:
         with open(self.ANILIST_CSV, "r") as f:
             spamreader = csv.DictReader(
                 f, delimiter=";", quotechar="|", fieldnames=self.FIELDNAMES
@@ -124,14 +116,14 @@ class Database:
 
     # FIX: TO SLOW
     def read_row(
-        self, search_query: str, typ: AniListType, column: int, filter_column=QUERY
+        self, search_query: str, typ: MediaType, column: int, filter_column=QUERY
     ) -> str:
         search_query = search_query.lower()
         try:
-            for row in self.get_rows():
+            for row in self._get_rows():
                 query = row[filter_column].lower()
                 anilist_title = row[self.ANILIST_TITLE].lower()
-                anilist_type = AniListType[row[self.ANILIST_TYPE].lower()]
+                anilist_type = MediaType[row[self.ANILIST_TYPE].lower()]
 
                 query = query.lower()
                 anilist_title = anilist_title.lower()

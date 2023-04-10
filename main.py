@@ -1,6 +1,6 @@
 from anilist import Anilist
 
-anilist = Anilist()
+TOKEN = ""
+anilist = Anilist(TOKEN)
+id_jjk = 101517
 title = "The Reincarnation Of Countess Diabolique"
-print(anilist.get_manga_title(title))
-print(anilist.get_manga_id(title))
