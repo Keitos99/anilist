@@ -35,13 +35,13 @@ SEARCH_IMAGES_QUERY = """
 """
 
 SEARCH_QUERY = """
-query ($page: Int, $perPage: Int, $search: String, $type: MediaType) {
+query ($page: Int, $perPage: Int, $search: String, $id: Int, $type: MediaType) {
     Page(page: $page, perPage: $perPage) {
       pageInfo {
         total
         perPage
       }
-      media(search: $search, type: $type, sort: FAVOURITES_DESC) {
+      media(search: $search, id: $id,type: $type, sort: FAVOURITES_DESC) {
         id
         synonyms
         type

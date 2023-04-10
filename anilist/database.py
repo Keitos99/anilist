@@ -119,22 +119,19 @@ class Database:
         self, search_query: str, typ: MediaType, column: int, filter_column=QUERY
     ) -> str:
         search_query = search_query.lower()
-        try:
-            for row in self._get_rows():
-                query = row[filter_column].lower()
-                anilist_title = row[self.ANILIST_TITLE].lower()
-                anilist_type = MediaType[row[self.ANILIST_TYPE].lower()]
+        for row in self._get_rows():
+            query = row[filter_column].lower()
+            anilist_title = row[self.ANILIST_TITLE].lower()
+            anilist_type = MediaType[row[self.ANILIST_TYPE].upper()]
 
-                query = query.lower()
-                anilist_title = anilist_title.lower()
-                search_query_with_strokes = search_query.replace(" ", "-")
-                if (
-                    query == search_query
-                    or anilist_title == search_query
-                    or query == search_query_with_strokes
-                ) and anilist_type == typ:
-                    return row[column]
+            query = query.lower()
+            anilist_title = anilist_title.lower()
+            search_query_with_strokes = search_query.replace(" ", "-")
+            if (
+                query == search_query
+                or anilist_title == search_query
+                or query == search_query_with_strokes
+            ) and anilist_type == typ:
+                return row[column]
 
-        except Exception:
-            return ""
         return ""
