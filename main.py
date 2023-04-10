@@ -1,4 +1,5 @@
 from anilist import Anilist
+from anilist.status import ReadingStatus
 
 TOKEN = ""
 anilist = Anilist(TOKEN)

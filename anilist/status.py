@@ -23,6 +23,7 @@ class ReadingStatus(enum.Enum):
     PAUSED = "PAUSED"
     UNKNOWN = "UNKNOWN"  # NOT AN ANILIST STATUS
 
+    @classmethod
     def decide_reading_status(self, id: int, publishing_status: PublishingStatus, progress: int, max_progress: int):
         if progress <= 0:
             return ReadingStatus.PLANNING
