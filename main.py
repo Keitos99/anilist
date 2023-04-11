@@ -1,7 +1,11 @@
+import os
+
 from anilist import Anilist
 from anilist.status import ReadingStatus
 
-TOKEN = ""
+TOKEN = os.environ["ANILIST_TOKEN"]
+for env in os.environ:
+    print(env)
 anilist = Anilist(TOKEN)
 id_jjk = 101517
 search_query = "I’m a Villainess But I Became a Mother"

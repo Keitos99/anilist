@@ -119,12 +119,13 @@ class Anilist:
             print(e)
             return False
 
-    def _search(self, type: MediaType, search_query: str) -> Dict:
+    def _search(self, type: MediaType, search_query: str, id=-1) -> Dict:
         search_query = search_query.replace("\n", "")
         title = None
-        id = -1
 
-        id = self.database.get_id(search_query, type)
+        if id <= 0:
+            id = self.database.get_id(search_query, type)
+
         if id > 0:  # was once searched, so choosing the correct one can be skipped
             response = _run_query(
                 self.URI,
@@ -133,8 +134,9 @@ class Anilist:
             )
             page = response["data"]["Page"]
             total = page["pageInfo"]["total"]
-            medias = page["media"]
-            return get_matching_media(search_query, medias)
+            if total > 0:
+                medias = page["media"]
+                return get_matching_media(search_query, medias)
 
         query = graphql.SEARCH_QUERY
         variables = {
@@ -164,6 +166,12 @@ class Anilist:
         # HACK: falling back to the first media
         media = page["media"][0]
         return media
+
+    def search_manga_with_id(self, id: int) -> Dict:
+        return self._search(MediaType.MANGA, "", id)
+
+    def search_anime_with_id(self, id: int) -> Dict:
+        return self._search(MediaType.ANIME, "", id)
 
     def search_manga(self, search_query: str) -> Dict:
         return self._search(MediaType.MANGA, search_query)

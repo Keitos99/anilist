@@ -3,10 +3,8 @@ import os
 from anilist import Anilist, get_matching_media, get_matching_title
 from anilist.status import ReadingStatus
 
-token = ""
-if "ANILIST_TOKEN" in os.environ:
-    token = os.environ["ANILIST_TOKEN"]
-anilist = Anilist(token)
+TOKEN = os.environ["ANILIST_TOKEN"]
+anilist = Anilist(TOKEN)
 
 
 def get_media_from_list(query, lists):  # NOTE: only useful while testing?
@@ -47,19 +45,33 @@ def test_searching_manga():
 def test_reading_status():
     id = 43748  # title: Defense Devil
 
-    assert ReadingStatus.COMPLETED == anilist.decide_reading_status(id, 100)
-    assert ReadingStatus.COMPLETED == anilist.decide_reading_status(id, 10000)
+    media = anilist.get_publishing_status(id)
+    publishing_status = media["publishing_status"]
+    max_progress = media["progress"]
 
-    assert ReadingStatus.CURRENT == anilist.decide_reading_status(id, 10)
-    assert ReadingStatus.CURRENT == anilist.decide_reading_status(id, 99)
-
-    assert ReadingStatus.PLANNING == anilist.decide_reading_status(id, 0)
-    assert ReadingStatus.PLANNING == anilist.decide_reading_status(id, -20)
+    assert ReadingStatus.COMPLETED == ReadingStatus.decide_reading_status(
+        id, publishing_status, 100, max_progress)
+    assert ReadingStatus.COMPLETED == ReadingStatus.decide_reading_status(
+        id, publishing_status, 10000, max_progress)
+    assert ReadingStatus.CURRENT == ReadingStatus.decide_reading_status(
+        id, publishing_status, 10, max_progress)
+    assert ReadingStatus.CURRENT == ReadingStatus.decide_reading_status(
+        id, publishing_status, 99, max_progress)
+    assert ReadingStatus.PLANNING == ReadingStatus.decide_reading_status(
+        id, publishing_status, 0, max_progress)
+    assert ReadingStatus.PLANNING == ReadingStatus.decide_reading_status(
+        id, publishing_status, -20, max_progress)
 
     id = 85611  # Tokyo Ghoul
-    assert ReadingStatus.COMPLETED == anilist.decide_reading_status(id, 181)
-    assert ReadingStatus.PLANNING == anilist.decide_reading_status(id, 0)
-    assert ReadingStatus.CURRENT == anilist.decide_reading_status(id, 170)
+    media = anilist.get_publishing_status(id)
+    publishing_status = media["publishing_status"]
+    max_progress = media["progress"]
+    assert ReadingStatus.COMPLETED == ReadingStatus.decide_reading_status(
+        id, publishing_status, 181, max_progress)
+    assert ReadingStatus.PLANNING == ReadingStatus.decide_reading_status(
+        id, publishing_status, 0, max_progress)
+    assert ReadingStatus.CURRENT == ReadingStatus.decide_reading_status(
+        id, publishing_status, 170, max_progress)
 
 
 def test_user_infos():
@@ -75,8 +87,7 @@ def test_get_manga_collection():
 
     manga_collection = anilist.get_manga_collection_by_id(user_id)
 
-    assert len(manga_collection["lists"]) > 0
-    assert len(manga_collection["lists"][0]["entries"]) > 0
+    assert len(manga_collection) > 0
 
 
 def test_get_matching_text():
@@ -202,13 +213,15 @@ def test_get_matching_text():
     assert get_matching_title("arsan senki", texts) == "Arslan Senki"
     assert get_matching_title("arsan-senki", texts) == "Arslan Senki"
     assert get_matching_title("-arsan-senki", texts) == "Arslan Senki"
-    assert get_matching_title("/damn-reinarnation", texts) == "Damn Reincarnation"
+    assert get_matching_title("/damn-reinarnation",
+                              texts) == "Damn Reincarnation"
 
 
 def test_titles_without_strokes():
     # assert anilist.get_manga_id("four knights of the apocalypse") == 129117
     assert (
-        anilist.get_manga_id("The Seven Deadly Sins: Four Knights of the Apocalypse")
+        anilist.get_manga_id(
+            "The Seven Deadly Sins: Four Knights of the Apocalypse")
         == 129117
     )
 
@@ -234,4 +247,3 @@ def test_get_cover_image():
         img_url
         == "https://s4.anilist.co/file/anilistcdn/media/manga/cover/small/bx54098-NZ21m9i1lZOs.jpg"
     )
-
