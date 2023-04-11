@@ -136,7 +136,7 @@ class Anilist:
             total = page["pageInfo"]["total"]
             if total > 0:
                 medias = page["media"]
-                return get_matching_media(search_query, medias)
+                return medias[0] # should only be one
 
         query = graphql.SEARCH_QUERY
         variables = {

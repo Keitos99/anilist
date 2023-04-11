@@ -9,4 +9,4 @@ for env in os.environ:
 anilist = Anilist(TOKEN)
 id_jjk = 101517
 search_query = "I’m a Villainess But I Became a Mother"
-print(anilist.search_manga(search_query))
+print(anilist.search_manga_with_id(117581))
