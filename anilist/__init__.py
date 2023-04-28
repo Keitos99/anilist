@@ -18,11 +18,12 @@ from anilist.tools import get_matching_media, get_matching_title
 def _run_query(uri, query, variables, headers=None, expected_status_code=HTTPStatus.OK):
     response = requests.post(
         uri, json={"query": query, "variables": variables}, headers=headers
-    )
+    , timeout=2)
     if response.status_code == expected_status_code:
         return response.json()
     if response.status_code == HTTPStatus.TOO_MANY_REQUESTS:
         # HACK: to many request so waiting before retrying
+        print("Restarting...")
         sleep(60)
         return _run_query(
             uri=uri,
