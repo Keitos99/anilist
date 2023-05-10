@@ -190,8 +190,6 @@ class Anilist:
 
         manga = self.search_manga(search_query=search_query)
         if not manga:
-            self.database.save(
-                search_query, search_query, -1, MediaType.MANGA)
             return ""
 
         self.database.save_media(search_query, manga)
