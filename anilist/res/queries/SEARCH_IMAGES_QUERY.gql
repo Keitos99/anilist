@@ -1,0 +1,16 @@
+query ($page: Int, $perPage: Int, $id: Int, $type: MediaType) {
+  Page(page: $page, perPage: $perPage) {
+    pageInfo {
+      total
+        perPage
+    }
+    media(id: $id, type: $type, sort: FAVOURITES_DESC) {
+      id
+        coverImage {
+          large
+            medium
+        }
+      bannerImage
+    }
+  }
+}

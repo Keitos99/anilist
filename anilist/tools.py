@@ -9,23 +9,24 @@ def get_res_file(res_file: str) -> str:
     return data_path
 
 
-def get_matching_media(query: str, medias: Dict) -> Dict:
+def find_matching_media(query: str, medias: Dict) -> Dict:
     test = {}
     for media in medias:
         titles = list(media["title"].values())
         synonyms = media["synonyms"]
 
         titles = titles + synonyms
-        title = get_matching_title(query, titles)
+        title = find_matching_title(query, titles)
         if title:
             return media
     return {}
 
 
-def get_matching_title(query: str, texts: List):
+def find_matching_title(query: str, titles: List):
     previous_ratio = 0
     matching_text = ""
-    for text in texts:
+    fallback = ""
+    for text in titles:
         if not text:
             continue
 
@@ -34,6 +35,8 @@ def get_matching_title(query: str, texts: List):
         if ratio > previous_ratio:
             previous_ratio = ratio
             matching_text = text
+        if query.lower() in text.lower():
+            fallback = query
     if previous_ratio < 0.8:
-        return ""
+        return fallback
     return matching_text

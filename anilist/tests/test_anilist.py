@@ -1,6 +1,6 @@
 import os
 
-from anilist import Anilist, get_matching_media, get_matching_title
+from anilist import Anilist, find_matching_media, find_matching_title
 from anilist.status import ReadingStatus
 
 TOKEN = os.environ["ANILIST_TOKEN"]
@@ -11,7 +11,7 @@ def get_media_from_list(query, lists):  # NOTE: only useful while testing?
     for list in lists:
         entries = list["entries"]
         medias = [entry["media"] for entry in entries]
-        media = get_matching_media(query, medias)
+        media = find_matching_media(query, medias)
         if media:
             return media
     return {}
@@ -207,13 +207,13 @@ def test_get_matching_text():
         "Damn Reincarnation",
     ]
 
-    assert get_matching_title("20th", texts) == ""
-    assert get_matching_title("20th", texts) != "20th Century Boys"
-    assert get_matching_title("ubel blatt", texts) == "Übel Blatt 0"
-    assert get_matching_title("arsan senki", texts) == "Arslan Senki"
-    assert get_matching_title("arsan-senki", texts) == "Arslan Senki"
-    assert get_matching_title("-arsan-senki", texts) == "Arslan Senki"
-    assert get_matching_title("/damn-reinarnation",
+    assert find_matching_title("20th", texts) == ""
+    assert find_matching_title("20th", texts) != "20th Century Boys"
+    assert find_matching_title("ubel blatt", texts) == "Übel Blatt 0"
+    assert find_matching_title("arsan senki", texts) == "Arslan Senki"
+    assert find_matching_title("arsan-senki", texts) == "Arslan Senki"
+    assert find_matching_title("-arsan-senki", texts) == "Arslan Senki"
+    assert find_matching_title("/damn-reinarnation",
                               texts) == "Damn Reincarnation"
 
 

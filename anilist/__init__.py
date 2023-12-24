@@ -10,9 +10,15 @@ import requests
 from requests.sessions import Request
 
 from anilist import queries as graphql
-from anilist.database import Database
-from anilist.status import MediaType, PublishingStatus, ReadingStatus
-from anilist.tools import get_matching_media, get_matching_title
+from anilist.status import (
+    AniAnime,
+    AniManga,
+    AniUser,
+    MediaType,
+    PublishingStatus,
+    ReadingStatus,
+)
+from anilist.tools import find_matching_media, find_matching_title
 
 
 def _run_query(uri, query, variables, headers=None, expected_status_code=HTTPStatus.OK):
@@ -23,7 +29,7 @@ def _run_query(uri, query, variables, headers=None, expected_status_code=HTTPSta
         return response.json()
     if response.status_code == HTTPStatus.TOO_MANY_REQUESTS:
         # HACK: to many request so waiting before retrying
-        print("Restarting...")
+        print(f"To many request to {uri}. Retrying after a 60 seconds...")
         sleep(60)
         return _run_query(
             uri=uri,
@@ -34,197 +40,121 @@ def _run_query(uri, query, variables, headers=None, expected_status_code=HTTPSta
         )
     else:
         # TODO: maybe it should retry it until it work?
+        print(f"Unexpected status code returned: {response.status_code}")
         print("run_query:: Query:", query)
         print("run_query:: variables", variables)
         print("run_query:: variables", response.text)
         raise Exception(
-            f"Unexpected status code returned: {response.status_code}")
+                f"ANILIST: Unexpected status code returned: {response.status_code}")
 
 
 class Anilist:
     URI = "https://graphql.anilist.co"
-    CONTENT_TYP = "application/json"
-    ACCEPT = "application/json"
-    DO_NOT_UPDATE = -2
-
-    # based on https://anilist.github.io/ApiV2-GraphQL-Docs/
-    def __init__(self, authorization: str = None, database=Database()):
-        self.database = database
-
+    # based of https://anilist.github.io/ApiV2-GraphQL-Docs/
+    def __init__(self, authorization: str = ""):
+        """
+        authorization must only be set, if you want to change somthing on anilist
+        """
         if not authorization:
             self.header = None
             return
 
+        CONTENT_TYP = "application/json"
+        ACCEPT = "application/json"
         self.header = {
             "Authorization": authorization,
-            "Content-Type": self.CONTENT_TYP,
-            "Accept": self.ACCEPT,
+            "Content-Type": CONTENT_TYP,
+            "Accept": ACCEPT,
         }
 
-    def get_publishing_status(self, media_id: int):
-        query = graphql.MAX_PROGRESS_QUERY
-        variables = {"id": media_id, "page": 1, "perPage": 100}
-        response = _run_query(self.URI, query=query, variables=variables)
+    def search_manga(self, search_query :str = "", media_id :int = 0) -> AniManga:
+        variables = {}
+        if media_id > 0:
+            variables["id"] = media_id
+        else:
+            variables["search"] = search_query
+
+        response = _run_query(uri=self.URI, query=graphql.SEARCH_MANGA, variables=variables, headers=self.header)
         medias = response["data"]["Page"]["media"]
-
-        if len(medias) == 0:
-            raise Exception(
-                f"Could not retrieve the reading status for the id: {media_id}!\n" +
-                "Check if this the correct is the correct id!")
-
-        media = medias[0]
-        publishing_status = PublishingStatus(media["status"])
-        max_progress = (
-            media["chapters"] if media["chapters"] != None else media["episodes"]
-        )
-        media = {}
-        media["progress"] = max_progress
-        media["publishing_status"] = publishing_status
-
-        return media
-
-    def update_progress(self, media_id: int, progress: int, reading_status: ReadingStatus = None) -> bool:
-        if not reading_status:
-            media = self.get_publishing_status(media_id)
-            max_progress = media["progress"]
-            publishing_status = media["publishing_status"]
-            reading_status = ReadingStatus.decide_reading_status(
-                media_id, publishing_status, progress, max_progress)
-
-        if not self.header:
-            raise Exception(
-                "You must add your anilist token to update entries")
-
-        if media_id < 0:
-            raise Exception("id={} must be positive".format(media_id))
-
-        if progress < 0:
-            raise Exception("progress={} must be positive".format(progress))
-
-        try:
-            query = graphql.MEDIA_PROGRESS_MUTATION
-            variables = {
-                "mediaId": media_id,
-                "status": reading_status.value,
-                "progress": progress,
-            }
-            response = _run_query(
-                self.URI, query=query, headers=self.header, variables=variables
-            )
-            saveMediaListEntry = response["data"]["SaveMediaListEntry"]
-            if media_id == saveMediaListEntry["mediaId"] and progress == saveMediaListEntry["progress"]:
-                return True
-            else:
-                return False
-        except Exception as e:
-            print(e)
-            return False
-
-    def _search(self, type: MediaType, search_query: str, id=-1) -> Dict:
-        search_query = search_query.replace("\n", "")
-        title = None
-
-        if id <= 0:
-            id = self.database.get_id(search_query, type)
-
-        if id > 0:  # was once searched, so choosing the correct one can be skipped
-            response = _run_query(
-                self.URI,
-                query=graphql.SEARCH_QUERY,
-                variables={"id": id, "typ": type.value},
-            )
-            page = response["data"]["Page"]
-            total = page["pageInfo"]["total"]
-            if total > 0:
-                medias = page["media"]
-                return medias[0] # should only be one
-
-        query = graphql.SEARCH_QUERY
-        variables = {
-            "search": search_query,
-            "type": type.value,
-        }
-
-        response = _run_query(
-            self.URI,
-            query=query,
-            variables=variables,
-        )
         page = response["data"]["Page"]
         total = page["pageInfo"]["total"]
-        medias = page["media"]
-
         if total == 0:
             return None
 
-        media = get_matching_media(search_query, medias)
+        medias = page["media"]
+        media = {}
+        if media_id > 0:
+            media = medias[0]
+        else:
+            media = find_matching_media(search_query, medias)
 
-        if media:
-            self.database.save_media(search_query, media)
-            return media
+        if not media:
+            return None
 
-        # TODO: not sure if this is the right approach
-        # HACK: falling back to the first media
-        media = page["media"][0]
-        return media
+        return AniManga(
+                id=media["id"],
+                synonyms=media["synonyms"],
+                ani_type=MediaType(media["type"]),
+                title=media["title"],
+                start_date=media["startDate"],
+                end_date=media["endDate"],
+                cover_image=media["coverImage"],
+                tags=media["tags"],
+                is_adult=media["isAdult"],
+                banner_image=media["bannerImage"],
+                format=media["format"],
+                chapters=media["chapters"],
+                volumes=media["volumes"],
+                status=PublishingStatus(media["status"]),
+                description=media["description"],
+                average_score=media["averageScore"],
+                mean_score=media["meanScore"],
+                genres=media["genres"],)
 
-    def search_manga_with_id(self, id: int) -> Dict:
-        return self._search(MediaType.MANGA, "", id)
+    def search_anime(self, search_query:str = "", media_id : int=0) -> AniAnime:
+        variables = {}
+        if media_id > 0:
+            variables["id"] = media_id
+        else:
+            variables["search"] = search_query
 
-    def search_anime_with_id(self, id: int) -> Dict:
-        return self._search(MediaType.ANIME, "", id)
 
-    def search_manga(self, search_query: str) -> Dict:
-        return self._search(MediaType.MANGA, search_query)
+        response = _run_query(uri=self.URI, query=graphql.SEARCH_ANIME, variables=variables, headers=self.header)
+        medias = response["data"]["Page"]["media"]
+        page = response["data"]["Page"]
+        total = page["pageInfo"]["total"]
+        if total == 0:
+            return None
 
-    def search_anime(self, search_query: str) -> Dict:
-        return self._search(MediaType.ANIME, search_query)
+        medias = page["media"]
+        media = {}
+        if media_id > 0:
+            media = medias[0]
+        else:
+            media = find_matching_media(search_query, medias)
+        if not media:
+            return None
 
-    def get_manga_title(self, search_query: str) -> int:
-        if self.database.get_id(search_query, MediaType.MANGA) == self.DO_NOT_UPDATE:
-            return self.database.get_title(search_query, MediaType.MANGA)
+        return AniAnime(
+                id=media["id"],
+                synonyms=media["synonyms"],
+                type=media["type"],
+                title=media["title"],
+                start_date=media["startDate"],
+                end_date=media["endDate"],
+                cover_image=media["coverImage"],
+                tags=media["tags"],
+                is_adult=media["isAdult"],
+                banner_image=media["bannerImage"],
+                format=media["format"],
+                episodes=media["episodes"],
+                status=PublishingStatus(media["status"]),
+                description=media["description"],
+                average_score=media["averageScore"],
+                mean_score=media["meanScore"],
+                genres=media["genres"],)
 
-        title = self.database.get_title(search_query, MediaType.MANGA)
-        if title:
-            return title
-
-        manga = self.search_manga(search_query=search_query)
-        if not manga:
-            return ""
-
-        self.database.save_media(search_query, manga)
-        titles = list(manga["title"].values()) + manga["synonyms"]
-        return get_matching_title(search_query, titles)
-
-    def get_manga_id(self, search_query: str) -> int:
-        id = self.database.get_id(search_query, MediaType.MANGA)
-        if id == self.DO_NOT_UPDATE:
-            return id
-
-        if id > 0:
-            return id
-
-        manga = self.search_manga(search_query=search_query)
-        if not manga:
-            return -1
-
-        self.database.save_media(search_query, manga)
-        return manga["id"]
-
-    def get_cover_image(self, media_id: int) -> str:
-        variables = {"id": media_id, "page": 1, "perPage": 1,
-                     "type": MediaType.MANGA.value}
-        try:
-            return _run_query(
-                uri=self.URI,
-                query=graphql.SEARCH_IMAGES_QUERY,
-                variables=variables,
-            )["data"]["Page"]["media"][0]["coverImage"]["medium"]
-        except Exception as e:
-            raise Exception(
-                f"Could not find a image for the id \"{media_id}\". Is it correct?")
-
-    def search_user(self, user_name: str):
+    def search_user(self, user_name: str) -> AniUser:
         variables = {"search": user_name, "sort": "USERNAME"}
         result = _run_query(
             uri=self.URI, query=graphql.SEARCH_USER_QUERY, variables=variables
@@ -233,50 +163,49 @@ class Anilist:
         users = result["data"]["Page"]["users"]
         for user in users:
             if user["name"] == user_name:
-                return user
+                return AniUser(
+                        id=user["id"],
+                        name=user["name"],
+                        avatar_url=user["avatar"]["large"],
+                        site_url=user["siteUrl"],
+                        previousNames=user["previousNames"],
+                        anime_statistics=user["statistics"]["anime"],
+                        manga_statistics=user["statistics"]["manga"],
+                        )
         return None
 
-    def get_manga_collection_by_name(self, user_name: str) -> Dict:
-        user = self.search_user(user_name)
-        if not user:
-            return {}
+    def update_progress(self, media_id: int, progress: int, reading_status: ReadingStatus = None) -> bool:
+        """
+        Attention: if it is an anime reading_status must be set
+        """ 
+        if media_id < 0:
+            raise Exception(f"id={media_id} must be positive")
 
-        user_id = user["id"]
-        return self.get_manga_collection_by_id(user_id)
+        if progress < 0:
+            raise Exception(f"progress={progress} must be positive")
 
-    def get_manga_collection_by_id(self, user_id: int) -> Dict:
-        variables = {"userId": user_id}
-        result = _run_query(
-            uri=self.URI, query=graphql.MANGA_LIST_COLLECTION_QUERY, variables=variables
+        if not reading_status:
+            manga = self.search_manga(media_id=media_id)
+            max_progress = manga.chapters
+            publishing_status = manga.status
+            reading_status = ReadingStatus.decide_reading_status(
+                media_id, publishing_status, progress, max_progress)
+
+        variables = {
+            "mediaId": media_id,
+            "status": reading_status.value,
+            "progress": progress,
+        }
+        response = _run_query(
+            self.URI, query=graphql.MEDIA_PROGRESS_MUTATION, headers=self.header, variables=variables
         )
-        lists = result["data"]["MediaListCollection"]["lists"]
 
-        mangas = {}
-        for list in lists:
-            entries = list["entries"]
-            for entry in entries:
-                reading_status = ReadingStatus[entry["status"]]
-                media = entry["media"]
-                id = media["id"]
-                title = media["title"]
-                media_status = PublishingStatus(media["status"])
-                max_chapters = media["chapters"]
-                genres = media["genres"]
-                tags = [tag["name"] for tag in media["tags"]]
-                if max_chapters == None:
-                    max_chapters = 0
-
-                mangas[id] = entry
-                mangas[id]["title"] = title
-                mangas[id]["status"] = reading_status
-                mangas[id]["media_status"] = media_status
-                mangas[id]["chapters"] = max_chapters
-                mangas[id]["genres"] = genres
-                mangas[id]["tags"] = tags
-        return mangas
+        save_media_list = response["data"]["SaveMediaListEntry"]
+        saved_reading_status = ReadingStatus(save_media_list["status"]) 
+        return (progress == save_media_list["progress"] or saved_reading_status == reading_status)
 
 
 if __name__ == "__main__":
-    token = os.environ["ANILIST_TOKEN"]
-    anilist = Anilist(token)
-    print(anilist.get_cover_image(anilist.get_manga_id("another")))
+    token = ""
+    anilist = Anilist(authorization=token)
+    print(anilist.search_manga(search_query="rowboatwhal"))

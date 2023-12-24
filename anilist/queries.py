@@ -33,15 +33,62 @@ SEARCH_IMAGES_QUERY = """
     }
   }
 """
-
-SEARCH_QUERY = """
-query ($page: Int, $perPage: Int, $search: String, $id: Int, $type: MediaType) {
+SEARCH_ANIME = """
+query ($page: Int, $perPage: Int, $search: String, $id: Int) {
     Page(page: $page, perPage: $perPage) {
       pageInfo {
         total
         perPage
       }
-      media(search: $search, id: $id,type: $type, sort: FAVOURITES_DESC) {
+      media(search: $search, id: $id,type: ANIME, sort: FAVOURITES_DESC) {
+        id
+        synonyms
+        type
+        title {
+            romaji
+            english
+            native
+            userPreferred
+        }
+        startDate {
+            year
+            month
+            day
+        }
+        endDate {
+            year
+            month
+            day
+        }
+        coverImage {
+            large
+        }
+        tags {
+            name
+        }
+        isAdult
+        bannerImage
+        format
+        episodes
+        status
+        description
+        averageScore
+        meanScore
+        genres
+        synonyms
+      }
+    }
+  }
+"""
+
+SEARCH_MANGA = """
+query ($page: Int, $perPage: Int, $search: String, $id: Int) {
+    Page(page: $page, perPage: $perPage) {
+      pageInfo {
+        total
+        perPage
+      }
+      media(search: $search, id: $id,type: MANGA, sort: FAVOURITES_DESC) {
         id
         synonyms
         type
@@ -81,7 +128,7 @@ query ($page: Int, $perPage: Int, $search: String, $id: Int, $type: MediaType) {
       }
     }
   }
-    """
+"""
 
 
 MEDIA_PROGRESS_MUTATION = """
@@ -194,6 +241,21 @@ query SearchUsersQuery(
             name
             avatar {
                 large
+            }
+            siteUrl
+            previousNames {
+                name
+                createdAt
+                updatedAt
+            }
+            statistics {
+                anime {
+                    count
+                }
+                manga {
+                    count
+                }
+
             }
         }
     }

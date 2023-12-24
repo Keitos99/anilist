@@ -1,9 +1,19 @@
+from dataclasses import dataclass
 import enum
+from typing import List, dataclass_transform
 
 
 class MediaType(enum.Enum):
     MANGA = "MANGA"
     ANIME = "ANIME"
+
+
+class MediaSeason(enum.Enum):
+    WINTER = "WINTER"
+    FALL = "FALL"
+    SUMMER = "SUMMER"
+    SPRING = "SPRING"
+    UNKNOWN = "UNKNOWN"
 
 
 class PublishingStatus(enum.Enum):
@@ -38,3 +48,54 @@ class ReadingStatus(enum.Enum):
             return ReadingStatus.COMPLETED
 
         return ReadingStatus.CURRENT
+
+@dataclass
+class AniManga:
+    id :int
+    synonyms :list
+    ani_type :str
+    title :dict
+    start_date :dict
+    end_date :dict
+    cover_image :dict
+    tags :list
+    is_adult :bool
+    banner_image :str
+    format :str
+    chapters :int
+    volumes :int
+    status :PublishingStatus
+    description :str
+    average_score :int
+    mean_score :int
+    genres :list
+
+@dataclass
+class AniAnime:
+    id :int
+    synonyms :list
+    type :str
+    title :dict
+    start_date :dict
+    end_date :dict
+    cover_image :dict
+    tags :list
+    is_adult :bool
+    banner_image :str
+    format :str
+    episodes :int
+    status :PublishingStatus
+    description :str
+    average_score :int
+    mean_score :int
+    genres :list
+
+@dataclass
+class AniUser:
+    id: str
+    name: str
+    avatar_url: str
+    site_url :str
+    previousNames :dict
+    anime_statistics :dict
+    manga_statistics :dict
