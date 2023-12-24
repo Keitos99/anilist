@@ -53,7 +53,7 @@ class Anilist:
     # based of https://anilist.github.io/ApiV2-GraphQL-Docs/
     def __init__(self, authorization: str = ""):
         """
-        authorization must only be set, if you want to change somthing on anilist
+        authorization must only be set, if you want to change something on anilist
         """
         if not authorization:
             self.header = None
@@ -174,6 +174,45 @@ class Anilist:
                         )
         return None
 
+    def get_user_manga_collection(self, user_name :str = "") -> bool:
+        user = self.search_user(user_name=user_name)
+        if not user:
+            return None
+
+        variables = { "userId": user.id }
+        response = _run_query(
+            self.URI, query=graphql.MANGA_LIST_COLLECTION_QUERY, headers=self.header, variables=variables
+        )
+
+        mangas = []
+        entries = response["data"]["MediaListCollection"]["lists"][0]["entries"]
+        for entry in entries:
+            media = entry["media"]
+            mangas.append( 
+                          AniManga(
+                              id=media["id"],
+                              synonyms=media["synonyms"],
+                              ani_type=MediaType(media["type"]),
+                              title=media["title"],
+                              start_date=media["startDate"],
+                              end_date=media["endDate"],
+                              cover_image=media["coverImage"],
+                              tags=media["tags"],
+                              is_adult=media["isAdult"],
+                              banner_image=media["bannerImage"],
+                              format=media["format"],
+                              chapters=media["chapters"],
+                              volumes=media["volumes"],
+                              status=PublishingStatus(media["status"]),
+                              description=media["description"],
+                              average_score=media["averageScore"],
+                              mean_score=media["meanScore"],
+                              genres=media["genres"],
+                              )
+            )
+
+        return mangas
+
     def update_progress(self, media_id: int, progress: int, reading_status: ReadingStatus = None) -> bool:
         """
         Attention: if it is an anime reading_status must be set
@@ -208,4 +247,6 @@ class Anilist:
 if __name__ == "__main__":
     token = ""
     anilist = Anilist(authorization=token)
-    print(anilist.search_manga(search_query="rowboatwhal"))
+    # print(len([for manga in  if manga.is_adult]))
+    print(anilist.get_user_manga_collection(user_name="rowboatwhal"))
+

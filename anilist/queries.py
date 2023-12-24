@@ -1,38 +1,3 @@
-MAX_PROGRESS_QUERY = """
-    query ($page: Int, $perPage: Int, $id: Int) {
-        Page(page: $page, perPage: $perPage) {
-          pageInfo {
-            total
-            perPage
-          }
-          media(id: $id) {
-            episodes
-            chapters
-            status
-          }
-        }
-      }
-"""
-
-
-SEARCH_IMAGES_QUERY = """
-    query ($page: Int, $perPage: Int, $id: Int, $type: MediaType) {
-    Page(page: $page, perPage: $perPage) {
-      pageInfo {
-        total
-        perPage
-      }
-      media(id: $id, type: $type, sort: FAVOURITES_DESC) {
-        id
-        coverImage {
-            large
-            medium
-        }
-        bannerImage
-      }
-    }
-  }
-"""
 SEARCH_ANIME = """
 query ($page: Int, $perPage: Int, $search: String, $id: Int) {
     Page(page: $page, perPage: $perPage) {
@@ -131,17 +96,6 @@ query ($page: Int, $perPage: Int, $search: String, $id: Int) {
 """
 
 
-MEDIA_PROGRESS_MUTATION = """
-    mutation ($mediaId: Int, $status: MediaListStatus, $progress: Int) {
-        SaveMediaListEntry (mediaId: $mediaId, status: $status, progress: $progress ) {
-            id
-            mediaId
-            status
-            progress
-        }
-    }
-"""
-
 MANGA_LIST_COLLECTION_QUERY = """
 query MangaListCollectionQuery(
     $userId: Int
@@ -151,6 +105,10 @@ query MangaListCollectionQuery(
         type: MANGA
     ) {
         lists {
+            name
+            isCustomList
+            isSplitCompletedList
+            status
             entries {
                 id
                 status
@@ -178,45 +136,43 @@ query MangaListCollectionQuery(
                 createdAt
                 media {
                     id
+                    synonyms
+                    type
                     title {
                         romaji
                         english
                         native
                         userPreferred
                     }
-                    type
-                    format
-                    status(version: 2)
                     startDate {
                         year
                         month
                         day
                     }
-                    chapters
-                    volumes
-                    countryOfOrigin
-                    source
-                    isFavourite
+                    endDate {
+                        year
+                        month
+                        day
+                    }
                     coverImage {
                         large
                     }
-                    genres
-                    synonyms
-                    averageScore
-                    popularity
                     tags {
                         name
                     }
                     isAdult
-                    externalLinks {
-                        site
-                    }
+                    bannerImage
+                    format
+                    chapters
+                    volumes
+                    status
+                    description
+                    averageScore
+                    meanScore
+                    genres
+                    synonyms
                 }
             }
-            name
-            isCustomList
-            isSplitCompletedList
-            status
         }
     }
 }
@@ -260,4 +216,15 @@ query SearchUsersQuery(
         }
     }
 }
+"""
+
+MEDIA_PROGRESS_MUTATION = """
+    mutation ($mediaId: Int, $status: MediaListStatus, $progress: Int) {
+        SaveMediaListEntry (mediaId: $mediaId, status: $status, progress: $progress ) {
+            id
+            mediaId
+            status
+            progress
+        }
+    }
 """
