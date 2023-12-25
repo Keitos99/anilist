@@ -107,4 +107,5 @@ class AniUserMangaEntry: # TODO: rename it
     repeat :int 
     progress :int
     notes :str
+    reading_status :ReadingStatus
     info :AniManga

@@ -196,6 +196,7 @@ class Anilist:
                         repeat=entry["repeat"],
                         progress=entry["progress"],
                         notes=entry["notes"],
+                        reading_status=entry["status"],
                         info= AniManga(
                             id=media["id"],
                             synonyms=media["synonyms"],
