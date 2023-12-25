@@ -14,6 +14,7 @@ from anilist.status import (
     AniAnime,
     AniManga,
     AniUser,
+    AniUserMangaEntry,
     MediaType,
     PublishingStatus,
     ReadingStatus,
@@ -98,7 +99,7 @@ class Anilist:
                 title=media["title"],
                 start_date=media["startDate"],
                 end_date=media["endDate"],
-                cover_image=media["coverImage"],
+                cover_image=media["coverImage"]["large"],
                 tags=media["tags"],
                 is_adult=media["isAdult"],
                 banner_image=media["bannerImage"],
@@ -174,7 +175,7 @@ class Anilist:
                         )
         return None
 
-    def get_user_manga_collection(self, user_name :str = "") -> bool:
+    def get_user_manga_collection(self, user_name :str = "") -> list[AniUserMangaEntry]:
         user = self.search_user(user_name=user_name)
         if not user:
             return None
@@ -184,32 +185,39 @@ class Anilist:
             self.URI, query=graphql.MANGA_LIST_COLLECTION_QUERY, headers=self.header, variables=variables
         )
 
-        mangas = []
+        mangas:list[AniUserMangaEntry] = []
         entries = response["data"]["MediaListCollection"]["lists"][0]["entries"]
         for entry in entries:
             media = entry["media"]
-            mangas.append( 
-                          AniManga(
-                              id=media["id"],
-                              synonyms=media["synonyms"],
-                              ani_type=MediaType(media["type"]),
-                              title=media["title"],
-                              start_date=media["startDate"],
-                              end_date=media["endDate"],
-                              cover_image=media["coverImage"],
-                              tags=media["tags"],
-                              is_adult=media["isAdult"],
-                              banner_image=media["bannerImage"],
-                              format=media["format"],
-                              chapters=media["chapters"],
-                              volumes=media["volumes"],
-                              status=PublishingStatus(media["status"]),
-                              description=media["description"],
-                              average_score=media["averageScore"],
-                              mean_score=media["meanScore"],
-                              genres=media["genres"],
-                              )
-            )
+            mangas.append(
+                    AniUserMangaEntry(
+                        entry_id=entry["id"],
+                        manga_id=media["id"],
+                        repeat=entry["repeat"],
+                        progress=entry["progress"],
+                        notes=entry["notes"],
+                        info= AniManga(
+                            id=media["id"],
+                            synonyms=media["synonyms"],
+                            ani_type=MediaType(media["type"]),
+                            title=media["title"],
+                            start_date=media["startDate"],
+                            end_date=media["endDate"],
+                            cover_image=media["coverImage"]["large"],
+                            tags=media["tags"],
+                            is_adult=media["isAdult"],
+                            banner_image=media["bannerImage"],
+                            format=media["format"],
+                            chapters=media["chapters"],
+                            volumes=media["volumes"],
+                            status=PublishingStatus(media["status"]),
+                            description=media["description"],
+                            average_score=media["averageScore"],
+                            mean_score=media["meanScore"],
+                            genres=media["genres"],
+                            )
+                        )
+                    )
 
         return mangas
 

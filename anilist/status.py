@@ -99,3 +99,12 @@ class AniUser:
     previousNames :dict
     anime_statistics :dict
     manga_statistics :dict
+
+@dataclass
+class AniUserMangaEntry: # TODO: rename it
+    entry_id :int
+    manga_id :int # doppelt gemoppelt?
+    repeat :int 
+    progress :int
+    notes :str
+    info :AniManga
