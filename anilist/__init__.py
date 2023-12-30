@@ -1,13 +1,7 @@
-import enum
 from http import HTTPStatus
-from os import error, ttyname, wait
-import os
-import shutil
 from time import sleep
-from typing import Dict, List, Tuple
 
 import requests
-from requests.sessions import Request
 
 from anilist import queries as graphql
 from anilist.status import (
@@ -19,7 +13,7 @@ from anilist.status import (
     PublishingStatus,
     ReadingStatus,
 )
-from anilist.tools import find_matching_media, find_matching_title
+from anilist.tools import find_matching_media
 
 
 def _run_query(uri, query, variables, headers=None, expected_status_code=HTTPStatus.OK):
@@ -30,7 +24,7 @@ def _run_query(uri, query, variables, headers=None, expected_status_code=HTTPSta
         return response.json()
     if response.status_code == HTTPStatus.TOO_MANY_REQUESTS:
         # HACK: to many request so waiting before retrying
-        print(f"To many request to {uri}. Retrying after a 60 seconds...")
+        print(f"To many were send to {uri}. We are waiting 60 seconds...")
         sleep(60)
         return _run_query(
             uri=uri,
@@ -133,6 +127,7 @@ class Anilist:
             media = medias[0]
         else:
             media = find_matching_media(search_query, medias)
+
         if not media:
             return None
 

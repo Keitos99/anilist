@@ -1,7 +1,6 @@
 import os
 
 from anilist import Anilist
-from anilist.status import ReadingStatus
 
 TOKEN = os.environ["ANILIST_TOKEN"]
 anilist = Anilist(TOKEN)
