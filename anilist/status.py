@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 import enum
-from typing import List, dataclass_transform
 
 
 class MediaType(enum.Enum):
