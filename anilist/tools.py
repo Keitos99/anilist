@@ -1,6 +1,5 @@
 from difflib import SequenceMatcher
 import os
-from typing import Dict, List, Tuple
 
 
 def get_res_file(res_file: str) -> str:
@@ -9,7 +8,7 @@ def get_res_file(res_file: str) -> str:
     return data_path
 
 
-def find_matching_media(query: str, medias: Dict) -> Dict:
+def find_matching_media(query: str, medias: dict) -> dict:
     test = {}
     for media in medias:
         titles = list(media["title"].values())
@@ -22,7 +21,7 @@ def find_matching_media(query: str, medias: Dict) -> Dict:
     return {}
 
 
-def find_matching_title(query: str, titles: List):
+def find_matching_title(query: str, titles: list):
     previous_ratio = 0
     matching_text = ""
     fallback = ""

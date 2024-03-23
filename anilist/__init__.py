@@ -1,13 +1,7 @@
-import enum
 from http import HTTPStatus
-from os import error, ttyname, wait
-import os
-import shutil
 from time import sleep
-from typing import Dict, List, Tuple
 
 import requests
-from requests.sessions import Request
 
 from anilist import queries as graphql
 from anilist.status import (
@@ -19,7 +13,7 @@ from anilist.status import (
     PublishingStatus,
     ReadingStatus,
 )
-from anilist.tools import find_matching_media, find_matching_title
+from anilist.tools import find_matching_media
 
 
 def _run_query(uri, query, variables, headers=None, expected_status_code=HTTPStatus.OK):
