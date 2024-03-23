@@ -3,7 +3,7 @@ import os
 from anilist import Anilist, find_matching_media, find_matching_title
 from anilist.status import ReadingStatus
 
-TOKEN = os.environ["ANILIST_TOKEN"]
+TOKEN = os.environ.get("ANILIST_TOKEN", "")
 anilist = Anilist(TOKEN)
 
 
