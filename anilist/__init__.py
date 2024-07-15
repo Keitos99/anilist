@@ -15,7 +15,7 @@ from anilist.status import (
 )
 from anilist.tools import find_matching_media
 
-TIMEOUT_IN_SECONDS = 20
+TIMEOUT_IN_SECONDS = 5
 RETRY_IN_SECONDS = 60
 
 
