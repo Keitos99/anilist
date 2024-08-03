@@ -50,28 +50,37 @@ def test_reading_status():
     max_progress = media["progress"]
 
     assert ReadingStatus.COMPLETED == ReadingStatus.decide_reading_status(
-        id, publishing_status, 100, max_progress)
+        id, publishing_status, 100, max_progress
+    )
     assert ReadingStatus.COMPLETED == ReadingStatus.decide_reading_status(
-        id, publishing_status, 10000, max_progress)
+        id, publishing_status, 10000, max_progress
+    )
     assert ReadingStatus.CURRENT == ReadingStatus.decide_reading_status(
-        id, publishing_status, 10, max_progress)
+        id, publishing_status, 10, max_progress
+    )
     assert ReadingStatus.CURRENT == ReadingStatus.decide_reading_status(
-        id, publishing_status, 99, max_progress)
+        id, publishing_status, 99, max_progress
+    )
     assert ReadingStatus.PLANNING == ReadingStatus.decide_reading_status(
-        id, publishing_status, 0, max_progress)
+        id, publishing_status, 0, max_progress
+    )
     assert ReadingStatus.PLANNING == ReadingStatus.decide_reading_status(
-        id, publishing_status, -20, max_progress)
+        id, publishing_status, -20, max_progress
+    )
 
     id = 85611  # Tokyo Ghoul
     media = anilist.get_publishing_status(id)
     publishing_status = media["publishing_status"]
     max_progress = media["progress"]
     assert ReadingStatus.COMPLETED == ReadingStatus.decide_reading_status(
-        id, publishing_status, 181, max_progress)
+        id, publishing_status, 181, max_progress
+    )
     assert ReadingStatus.PLANNING == ReadingStatus.decide_reading_status(
-        id, publishing_status, 0, max_progress)
+        id, publishing_status, 0, max_progress
+    )
     assert ReadingStatus.CURRENT == ReadingStatus.decide_reading_status(
-        id, publishing_status, 170, max_progress)
+        id, publishing_status, 170, max_progress
+    )
 
 
 def test_user_infos():
@@ -213,15 +222,13 @@ def test_get_matching_text():
     assert find_matching_title("arsan senki", texts) == "Arslan Senki"
     assert find_matching_title("arsan-senki", texts) == "Arslan Senki"
     assert find_matching_title("-arsan-senki", texts) == "Arslan Senki"
-    assert find_matching_title("/damn-reinarnation",
-                              texts) == "Damn Reincarnation"
+    assert find_matching_title("/damn-reinarnation", texts) == "Damn Reincarnation"
 
 
 def test_titles_without_strokes():
     # assert anilist.get_manga_id("four knights of the apocalypse") == 129117
     assert (
-        anilist.get_manga_id(
-            "The Seven Deadly Sins: Four Knights of the Apocalypse")
+        anilist.get_manga_id("The Seven Deadly Sins: Four Knights of the Apocalypse")
         == 129117
     )
 

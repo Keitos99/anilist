@@ -277,10 +277,3 @@ class Anilist:
             progress == save_media_list["progress"]
             or saved_reading_status == reading_status
         )
-
-
-if __name__ == "__main__":
-    token = ""
-    anilist = Anilist(authorization=token)
-    # print(len([for manga in  if manga.is_adult]))
-    print(anilist.get_user_manga_collection(user_name="rowboatwhal"))

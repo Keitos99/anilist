@@ -1,5 +1,5 @@
-from dataclasses import dataclass
 import enum
+from dataclasses import dataclass
 
 
 class MediaType(enum.Enum):
@@ -33,7 +33,13 @@ class ReadingStatus(enum.Enum):
     UNKNOWN = "UNKNOWN"  # NOT AN ANILIST STATUS
 
     @classmethod
-    def decide_reading_status(self, id: int, publishing_status: PublishingStatus, progress: int, max_progress: int):
+    def decide_reading_status(
+        self,
+        id: int,
+        publishing_status: PublishingStatus,
+        progress: int,
+        max_progress: int,
+    ):
         if progress <= 0:
             return ReadingStatus.PLANNING
 
@@ -48,63 +54,67 @@ class ReadingStatus(enum.Enum):
 
         return ReadingStatus.CURRENT
 
+
 @dataclass
 class AniManga:
-    id :int
-    synonyms :list
-    ani_type :str
-    title :dict
-    start_date :dict
-    end_date :dict
-    cover_image :dict
-    tags :list
-    is_adult :bool
-    banner_image :str
-    format :str
-    chapters :int
-    volumes :int
-    status :PublishingStatus
-    description :str
-    average_score :int
-    mean_score :int
-    genres :list
+    id: int
+    synonyms: list
+    ani_type: str
+    title: dict
+    start_date: dict
+    end_date: dict
+    cover_image: dict
+    tags: list
+    is_adult: bool
+    banner_image: str
+    format: str
+    chapters: int
+    volumes: int
+    status: PublishingStatus
+    description: str
+    average_score: int
+    mean_score: int
+    genres: list
+
 
 @dataclass
 class AniAnime:
-    id :int
-    synonyms :list
-    type :str
-    title :dict
-    start_date :dict
-    end_date :dict
-    cover_image :dict
-    tags :list
-    is_adult :bool
-    banner_image :str
-    format :str
-    episodes :int
-    status :PublishingStatus
-    description :str
-    average_score :int
-    mean_score :int
-    genres :list
+    id: int
+    synonyms: list
+    type: str
+    title: dict
+    start_date: dict
+    end_date: dict
+    cover_image: dict
+    tags: list
+    is_adult: bool
+    banner_image: str
+    format: str
+    episodes: int
+    status: PublishingStatus
+    description: str
+    average_score: int
+    mean_score: int
+    genres: list
+
 
 @dataclass
 class AniUser:
     id: str
     name: str
     avatar_url: str
-    site_url :str
-    previousNames :dict
-    anime_statistics :dict
-    manga_statistics :dict
+    site_url: str
+    previousNames: dict
+    anime_statistics: dict
+    manga_statistics: dict
+
 
 @dataclass
-class AniUserMangaEntry: # TODO: rename it
-    entry_id :int
-    manga_id :int # doppelt gemoppelt?
-    repeat :int 
-    progress :int
-    notes :str
-    reading_status :ReadingStatus
-    info :AniManga
+class AniUserMangaEntry:  # TODO: rename it
+    entry_id: int
+    manga_id: int
+    repeat: int
+    progress: int
+    notes: str
+    reading_status: ReadingStatus
+    info: AniManga

@@ -1,6 +1,6 @@
 import os
-from anilist import Anilist
 
+from anilist import Anilist
 
 if __name__ == "__main__":
     TOKEN = os.environ.get("ANILIST_TOKEN", "")
