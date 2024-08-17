@@ -16,7 +16,7 @@ from anilist.status import (
 from anilist.tools import find_matching_media
 
 TIMEOUT_IN_SECONDS = 5
-RETRY_IN_SECONDS = 60
+DEFAULT_RETRY_AFTER_SECONDS = 60
 
 
 def _run_query(url, query, variables, headers=None, expected_status_code=HTTPStatus.OK):
@@ -26,14 +26,16 @@ def _run_query(url, query, variables, headers=None, expected_status_code=HTTPSta
         headers=headers,
         timeout=TIMEOUT_IN_SECONDS,
     )
+    retry_after_seconds: int = int(
+        response.headers.get("Retry-After", DEFAULT_RETRY_AFTER_SECONDS)
+    )
     if response.status_code == expected_status_code:
         return response.json()
+
     if response.status_code == HTTPStatus.TOO_MANY_REQUESTS:
         # HACK: to many request so waiting before retrying
-        print(
-            f"To many request to {url}. Retrying after a {RETRY_IN_SECONDS} seconds..."
-        )
-        sleep(RETRY_IN_SECONDS)
+        print(f"Rate limit exceeded. Waiting {retry_after_seconds} seconds.")
+        sleep(retry_after_seconds)
         return _run_query(
             url=url,
             query=query,
