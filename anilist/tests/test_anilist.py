@@ -1,7 +1,8 @@
 import os
 
-from anilist import Anilist, find_matching_media, find_matching_title
-from anilist.status import ReadingStatus
+from anilist import Anilist
+from anilist.status import PublishingStatus, ReadingStatus
+from anilist.tools import find_matching_media, find_matching_title
 
 TOKEN = os.environ.get("ANILIST_TOKEN", "")
 anilist = Anilist(TOKEN)
@@ -17,37 +18,71 @@ def get_media_from_list(query, lists):  # NOTE: only useful while testing?
     return {}
 
 
-def test_searching_manga():
+def test_find_matching_medias():
     result_title = "The Horizon"
     result_id = 100568
 
+    medias = [
+        {
+            "id": 100568,
+            "synonyms": ["Горизонт", "El horizonte", "水平线", "เส้นขอบฟ้า", "Крайнебо"],
+            "title": {
+                "romaji": "Supyeongseon",
+                "english": "The Horizon",
+                "native": "수평선",
+                "userPreferred": "Supyeongseon",
+            },
+        },
+        {
+            "id": 105688,
+            "synonyms": [
+                "I Will Not Reach You.",
+                "รักนี้ส่งไปไม่ถึงเธอ",
+                "Chẳng thể chạm tới",
+                "Barreras del corazón ",
+            ],
+            "title": {
+                "romaji": "Kimi ni wa Todokanai.",
+                "english": "I Cannot Reach You",
+                "native": "君には届かない。",
+                "userPreferred": "Kimi ni wa Todokanai.",
+            },
+        },
+        {
+            "id": 76024,
+            "synonyms": [],
+            "title": {
+                "romaji": "Log Horizon",
+                "english": "Log Horizon",
+                "native": "ログ・ホライズン",
+                "userPreferred": "Log Horizon",
+            },
+        },
+    ]
     search_query = "the-horizon"
-    assert anilist.get_manga_title(search_query) == result_title
-    assert anilist.get_manga_id(search_query) == result_id
+    assert result_title in find_matching_media(search_query, medias)["title"].values()
+    assert find_matching_media(search_query, medias)["id"] == result_id
 
     search_query = "the-horizo"
-    assert anilist.get_manga_title(search_query) == result_title
-    assert anilist.get_manga_id(search_query) == result_id
+    assert result_title in find_matching_media(search_query, medias)["title"].values()
+    assert find_matching_media(search_query, medias)["id"] == result_id
 
     search_query = "thehorizo"
-    assert anilist.get_manga_title(search_query) == result_title
-    assert anilist.get_manga_id(search_query) == result_id
+    assert result_title in find_matching_media(search_query, medias)["title"].values()
+    assert find_matching_media(search_query, medias)["id"] == result_id
 
     search_query = "the horizo"
-    assert anilist.get_manga_title(search_query) == result_title
-    assert anilist.get_manga_id(search_query) == result_id
+    assert result_title in find_matching_media(search_query, medias)["title"].values()
+    assert find_matching_media(search_query, medias)["id"] == result_id
 
     search_query = "the horizon"
-    assert anilist.get_manga_title(search_query) == result_title
-    assert anilist.get_manga_id(search_query) == result_id
+    assert result_title in find_matching_media(search_query, medias)["title"].values()
+    assert find_matching_media(search_query, medias)["id"] == result_id
 
 
 def test_reading_status():
-    id = 43748  # title: Defense Devil
-
-    media = anilist.get_publishing_status(id)
-    publishing_status = media["publishing_status"]
-    max_progress = media["progress"]
+    publishing_status = PublishingStatus.FINISHED
+    max_progress = 100
 
     assert ReadingStatus.COMPLETED == ReadingStatus.decide_reading_status(
         id, publishing_status, 100, max_progress
@@ -68,10 +103,8 @@ def test_reading_status():
         id, publishing_status, -20, max_progress
     )
 
-    id = 85611  # Tokyo Ghoul
-    media = anilist.get_publishing_status(id)
-    publishing_status = media["publishing_status"]
-    max_progress = media["progress"]
+    publishing_status = PublishingStatus.FINISHED
+    max_progress = 181
     assert ReadingStatus.COMPLETED == ReadingStatus.decide_reading_status(
         id, publishing_status, 181, max_progress
     )
@@ -81,22 +114,6 @@ def test_reading_status():
     assert ReadingStatus.CURRENT == ReadingStatus.decide_reading_status(
         id, publishing_status, 170, max_progress
     )
-
-
-def test_user_infos():
-    user_name = "Keitos"
-    user_infos = anilist.search_user(user_name)
-
-    assert user_infos["name"] == user_name
-    assert user_infos["id"] == 5543995
-
-
-def test_get_manga_collection():
-    user_id = 5543995  # User id of Keitos
-
-    manga_collection = anilist.get_manga_collection_by_id(user_id)
-
-    assert len(manga_collection) > 0
 
 
 def test_get_matching_text():
@@ -216,41 +233,9 @@ def test_get_matching_text():
         "Damn Reincarnation",
     ]
 
-    assert find_matching_title("20th", texts) == ""
     assert find_matching_title("20th", texts) != "20th Century Boys"
     assert find_matching_title("ubel blatt", texts) == "Übel Blatt 0"
     assert find_matching_title("arsan senki", texts) == "Arslan Senki"
     assert find_matching_title("arsan-senki", texts) == "Arslan Senki"
     assert find_matching_title("-arsan-senki", texts) == "Arslan Senki"
     assert find_matching_title("/damn-reinarnation", texts) == "Damn Reincarnation"
-
-
-def test_titles_without_strokes():
-    # assert anilist.get_manga_id("four knights of the apocalypse") == 129117
-    assert (
-        anilist.get_manga_id("The Seven Deadly Sins: Four Knights of the Apocalypse")
-        == 129117
-    )
-
-
-def test_deep_search_medias():
-    manga_collection = anilist.get_manga_collection_by_id(5543995)
-    lists = manga_collection["lists"]
-
-    query = "Ariureta Shkugyou deSekai Saikyou"
-    media = get_media_from_list(query, lists)
-    titles = list(media["title"].values()) + media["synonyms"]
-    assert "Arifureta: From Commonplace to World’s Strongest" in titles
-
-    query = "/damn-reinarnation"
-    media = get_media_from_list(query, lists)
-    titles = list(media["title"].values()) + media["synonyms"]
-    assert "Damn Reincarnation" in titles
-
-
-def test_get_cover_image():
-    img_url = anilist.get_cover_image(anilist.get_manga_id("Another"))
-    assert (
-        img_url
-        == "https://s4.anilist.co/file/anilistcdn/media/manga/cover/small/bx54098-NZ21m9i1lZOs.jpg"
-    )

@@ -1,5 +1,5 @@
-from difflib import SequenceMatcher
 import os
+from difflib import SequenceMatcher
 
 
 def get_res_file(res_file: str) -> str:
@@ -9,7 +9,6 @@ def get_res_file(res_file: str) -> str:
 
 
 def find_matching_media(query: str, medias: dict) -> dict:
-    test = {}
     for media in medias:
         titles = list(media["title"].values())
         synonyms = media["synonyms"]
