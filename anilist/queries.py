@@ -228,3 +228,11 @@ MEDIA_PROGRESS_MUTATION = """
         }
     }
 """
+
+GET_USERNAME_QUERY = """
+query {
+    Viewer {
+        name
+    }
+}
+"""

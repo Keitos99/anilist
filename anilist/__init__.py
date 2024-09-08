@@ -280,3 +280,12 @@ class Anilist:
             progress == save_media_list["progress"]
             or saved_reading_status == reading_status
         )
+
+    def get_username(self) -> str:
+        if not self.header:
+            raise RuntimeError("Authorization is required to get the username")
+
+        response = _run_query(
+            self.URI, graphql.GET_USERNAME_QUERY, {}, headers=self.header
+        )
+        return response["data"]["Viewer"]["name"]
