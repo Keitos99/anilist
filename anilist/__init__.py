@@ -15,59 +15,56 @@ from anilist.status import (
 )
 from anilist.tools import find_matching_media
 
+URL = "https://graphql.anilist.co"
 TIMEOUT_IN_SECONDS = 5
 DEFAULT_RETRY_AFTER_SECONDS = 60
 
 
-def _run_query(url, query, variables, headers=None, expected_status_code=HTTPStatus.OK):
+def __post_query(query, variables={}, headers=None):
     response = requests.post(
-        url,
+        URL,
         json={"query": query, "variables": variables},
         headers=headers,
         timeout=TIMEOUT_IN_SECONDS,
     )
-    retry_after_seconds: int = int(
-        response.headers.get("Retry-After", DEFAULT_RETRY_AFTER_SECONDS)
-    )
-    if response.status_code == expected_status_code:
+
+    if response.status_code == HTTPStatus.OK:
         return response.json()
 
+    response_headers = response.headers
     if response.status_code == HTTPStatus.TOO_MANY_REQUESTS:
         # HACK: to many request so waiting before retrying
-        print(f"Rate limit exceeded. Waiting {retry_after_seconds} seconds.")
+        retry_after_seconds: int = int(
+            response_headers.get("Retry-After", DEFAULT_RETRY_AFTER_SECONDS)
+        )
+
+        print(
+            f"Rate limit exceeded. Waiting {retry_after_seconds} seconds before retrying."
+        )
         sleep(retry_after_seconds)
-        return _run_query(
-            url=url,
-            query=query,
-            variables=variables,
-            headers=headers,
-            expected_status_code=expected_status_code,
-        )
-    else:
-        # TODO: maybe it should retry it until it work?
-        raise Exception(
-            f"Unexpected status code {response.status_code} was returned from the server.\n"
-            + f"Query: {query}\n"
-            + f"variables: {variables}\n"
-            + f"response text: {response.text}\n"
-        )
+        return __post_query(query=query, variables=variables, headers=headers)
+
+    raise Exception(
+        f"Unexpected status code {response.status_code} was returned from the server.\n"
+        + f"Query: {query}\n"
+        + f"variables: {variables}\n"
+        + f"response text: {response.text}\n"
+    )
 
 
 class Anilist:
-    URI = "https://graphql.anilist.co"
-
     # based of https://anilist.github.io/ApiV2-GraphQL-Docs/
     def __init__(self, authorization: str = ""):
         """
         authorization must only be set, if you want to change something on anilist
         """
         if not authorization:
-            self.header = None
+            self.headers = None
             return
 
         CONTENT_TYP = "application/json"
         ACCEPT = "application/json"
-        self.header = {
+        self.headers = {
             "Authorization": authorization,
             "Content-Type": CONTENT_TYP,
             "Accept": ACCEPT,
@@ -80,11 +77,10 @@ class Anilist:
         else:
             variables["search"] = search_query
 
-        response = _run_query(
-            url=self.URI,
+        response = __post_query(
             query=graphql.SEARCH_MANGA,
             variables=variables,
-            headers=self.header,
+            headers=self.headers,
         )
         medias = response["data"]["Page"]["media"]
         page = response["data"]["Page"]
@@ -131,11 +127,10 @@ class Anilist:
         else:
             variables["search"] = search_query
 
-        response = _run_query(
-            url=self.URI,
+        response = __post_query(
             query=graphql.SEARCH_ANIME,
             variables=variables,
-            headers=self.header,
+            headers=self.headers,
         )
         medias = response["data"]["Page"]["media"]
         page = response["data"]["Page"]
@@ -174,9 +169,7 @@ class Anilist:
 
     def search_user(self, user_name: str) -> AniUser:
         variables = {"search": user_name, "sort": "USERNAME"}
-        result = _run_query(
-            url=self.URI, query=graphql.SEARCH_USER_QUERY, variables=variables
-        )
+        result = __post_query(query=graphql.SEARCH_USER_QUERY, variables=variables)
 
         users = result["data"]["Page"]["users"]
         for user in users:
@@ -198,10 +191,9 @@ class Anilist:
             return None
 
         variables = {"userId": user.id}
-        response = _run_query(
-            self.URI,
+        response = __post_query(
             query=graphql.MANGA_LIST_COLLECTION_QUERY,
-            headers=self.header,
+            headers=self.headers,
             variables=variables,
         )
 
@@ -267,10 +259,9 @@ class Anilist:
             "status": reading_status.value,
             "progress": progress,
         }
-        response = _run_query(
-            self.URI,
+        response = __post_query(
             query=graphql.MEDIA_PROGRESS_MUTATION,
-            headers=self.header,
+            headers=self.headers,
             variables=variables,
         )
 
@@ -282,10 +273,8 @@ class Anilist:
         )
 
     def get_username(self) -> str:
-        if not self.header:
+        if not self.headers:
             raise RuntimeError("Authorization is required to get the username")
 
-        response = _run_query(
-            self.URI, graphql.GET_USERNAME_QUERY, {}, headers=self.header
-        )
+        response = __post_query(graphql.GET_USERNAME_QUERY, headers=self.headers)
         return response["data"]["Viewer"]["name"]
