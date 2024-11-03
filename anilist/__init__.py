@@ -185,12 +185,16 @@ class Anilist:
                 )
         return None
 
-    def get_user_manga_collection(self, user_name: str = "") -> list[AniUserMangaEntry]:
-        user = self.search_user(user_name=user_name)
-        if not user:
-            return None
+    def get_user_manga_collection(
+        self, user_name: str = "", user_id: int = None
+    ) -> list[AniUserMangaEntry]:
+        if user_id is None:
+            user = self.search_user(user_name=user_name)
+            if not user:
+                return []
+            user_id = user.id
 
-        variables = {"userId": user.id}
+        variables = {"userId": user_id}
         response = __post_query(
             query=graphql.MANGA_LIST_COLLECTION_QUERY,
             headers=self.headers,
