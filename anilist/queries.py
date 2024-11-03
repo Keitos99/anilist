@@ -229,10 +229,29 @@ MEDIA_PROGRESS_MUTATION = """
     }
 """
 
-GET_USERNAME_QUERY = """
+GET_AUTH_USER = """
 query {
     Viewer {
+        id
         name
+        avatar {
+            large
+        }
+        siteUrl
+        previousNames {
+            name
+            createdAt
+            updatedAt
+        }
+        statistics {
+            anime {
+                count
+            }
+            manga {
+                count
+            }
+        }
+
     }
 }
 """

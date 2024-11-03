@@ -20,7 +20,7 @@ TIMEOUT_IN_SECONDS = 5
 DEFAULT_RETRY_AFTER_SECONDS = 60
 
 
-def __post_query(query, variables={}, headers=None):
+def post_query(query, variables={}, headers=None):
     response = requests.post(
         URL,
         json={"query": query, "variables": variables},
@@ -42,7 +42,7 @@ def __post_query(query, variables={}, headers=None):
             f"Rate limit exceeded. Waiting {retry_after_seconds} seconds before retrying."
         )
         sleep(retry_after_seconds)
-        return __post_query(query=query, variables=variables, headers=headers)
+        return post_query(query=query, variables=variables, headers=headers)
 
     raise Exception(
         f"Unexpected status code {response.status_code} was returned from the server.\n"
@@ -77,7 +77,7 @@ class Anilist:
         else:
             variables["search"] = search_query
 
-        response = __post_query(
+        response = post_query(
             query=graphql.SEARCH_MANGA,
             variables=variables,
             headers=self.headers,
@@ -127,7 +127,7 @@ class Anilist:
         else:
             variables["search"] = search_query
 
-        response = __post_query(
+        response = post_query(
             query=graphql.SEARCH_ANIME,
             variables=variables,
             headers=self.headers,
@@ -167,13 +167,13 @@ class Anilist:
             genres=media["genres"],
         )
 
-    def search_user(self, user_name: str) -> AniUser:
-        variables = {"search": user_name, "sort": "USERNAME"}
-        result = __post_query(query=graphql.SEARCH_USER_QUERY, variables=variables)
+    def search_user(self, username: str) -> AniUser:
+        variables = {"search": username}
+        result = post_query(query=graphql.SEARCH_USER_QUERY, variables=variables)
 
         users = result["data"]["Page"]["users"]
         for user in users:
-            if user["name"] == user_name:
+            if user["name"] == username:
                 return AniUser(
                     id=user["id"],
                     name=user["name"],
@@ -186,16 +186,16 @@ class Anilist:
         return None
 
     def get_user_manga_collection(
-        self, user_name: str = "", user_id: int = None
+        self, username: str = "", user_id: int = None
     ) -> list[AniUserMangaEntry]:
         if user_id is None:
-            user = self.search_user(user_name=user_name)
+            user = self.search_user(username=username)
             if not user:
                 return []
             user_id = user.id
 
         variables = {"userId": user_id}
-        response = __post_query(
+        response = post_query(
             query=graphql.MANGA_LIST_COLLECTION_QUERY,
             headers=self.headers,
             variables=variables,
@@ -263,7 +263,7 @@ class Anilist:
             "status": reading_status.value,
             "progress": progress,
         }
-        response = __post_query(
+        response = post_query(
             query=graphql.MEDIA_PROGRESS_MUTATION,
             headers=self.headers,
             variables=variables,
@@ -280,7 +280,7 @@ class Anilist:
         if not self.headers:
             raise RuntimeError("Authorization is required to get the username")
 
-        response = __post_query(graphql.GET_AUTH_USER, headers=self.headers)
+        response = post_query(graphql.GET_AUTH_USER, headers=self.headers)
         user = response["data"]["Viewer"]
 
         return AniUser(
