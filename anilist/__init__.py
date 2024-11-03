@@ -276,9 +276,19 @@ class Anilist:
             or saved_reading_status == reading_status
         )
 
-    def get_username(self) -> str:
+    def get_user(self) -> AniUser:
         if not self.headers:
             raise RuntimeError("Authorization is required to get the username")
 
-        response = __post_query(graphql.GET_USERNAME_QUERY, headers=self.headers)
-        return response["data"]["Viewer"]["name"]
+        response = __post_query(graphql.GET_AUTH_USER, headers=self.headers)
+        user = response["data"]["Viewer"]
+
+        return AniUser(
+            id=user["id"],
+            name=user["name"],
+            avatar_url=user["avatar"]["large"],
+            site_url=user["siteUrl"],
+            previousNames=user["previousNames"],
+            anime_statistics=user["statistics"]["anime"],
+            manga_statistics=user["statistics"]["manga"],
+        )
