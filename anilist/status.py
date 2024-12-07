@@ -100,7 +100,7 @@ class AniAnime:
 
 @dataclass
 class AniUser:
-    id: str
+    id: int
     name: str
     avatar_url: str
     site_url: str
