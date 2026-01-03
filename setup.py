@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name="anilist",
-    version="0.1.3",
+    version="0.1.4",
     description="A Anilist API",
     url="https://github.com/Agsayan/anilist",
     author="Sayan",
