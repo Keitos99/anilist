@@ -20,21 +20,30 @@ def find_matching_media(query: str, medias: dict) -> dict:
     return {}
 
 
-def find_matching_title(query: str, titles: list):
-    previous_ratio = 0
-    matching_text = ""
+def find_matching_title(query: str, titles: list[str]):
+    SIMILARITY_THRESHOLD = 0.8
+
+    query_lower = query.lower()
+    best_matching_ratio = 0
+    best_matching_text = ""
     fallback = ""
-    for text in titles:
-        if not text:
+
+    for title in titles:
+        if not title:
             continue
 
-        ratio = SequenceMatcher(None, text.lower(), query.lower()).ratio()
+        title_lower = title.lower()
+        ratio = SequenceMatcher(None, title_lower, query_lower).ratio()
 
-        if ratio > previous_ratio:
-            previous_ratio = ratio
-            matching_text = text
-        if query.lower() in text.lower():
-            fallback = query
-    if previous_ratio < 0.8:
-        return fallback
-    return matching_text
+        if ratio > best_matching_ratio:
+            best_matching_ratio = ratio
+            best_matching_text = title
+
+        if fallback is None and query_lower in title_lower:
+            # Use the first title with a matching substring as a fallback
+            fallback = title
+
+    if best_matching_ratio >= SIMILARITY_THRESHOLD:
+        return best_matching_text
+
+    return fallback
