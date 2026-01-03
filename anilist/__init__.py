@@ -89,7 +89,6 @@ class Anilist:
             return None
 
         medias = page["media"]
-        print(medias)
         media = {}
         if media_id > 0:
             media = medias[0]
